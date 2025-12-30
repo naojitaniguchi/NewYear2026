@@ -1,0 +1,299 @@
+// Happy New Year 2026 - 3D Text Shader
+// ShaderToy compatible code
+
+// SDF for a box
+float sdBox(vec3 p, vec3 b) {
+    vec3 q = abs(p) - b;
+    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+
+// Simple 3D text using boxes to form letters
+float sdLetter_H(vec3 p) {
+    float left = sdBox(p - vec3(-0.3, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float right = sdBox(p - vec3(0.3, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float middle = sdBox(p - vec3(0.0, 0.0, 0.0), vec3(0.3, 0.08, 0.08));
+    return min(left, min(right, middle));
+}
+
+float sdLetter_A(vec3 p) {
+    float left = sdBox(p - vec3(-0.25, -0.1, 0.0), vec3(0.08, 0.4, 0.08));
+    float right = sdBox(p - vec3(0.25, -0.1, 0.0), vec3(0.08, 0.4, 0.08));
+    float top = sdBox(p - vec3(0.0, 0.3, 0.0), vec3(0.25, 0.08, 0.08));
+    float middle = sdBox(p - vec3(0.0, 0.0, 0.0), vec3(0.2, 0.08, 0.08));
+    return min(min(left, right), min(top, middle));
+}
+
+float sdLetter_P(vec3 p) {
+    float stem = sdBox(p - vec3(-0.2, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float top = sdBox(p - vec3(0.0, 0.3, 0.0), vec3(0.2, 0.08, 0.08));
+    float right = sdBox(p - vec3(0.2, 0.15, 0.0), vec3(0.08, 0.15, 0.08));
+    float middle = sdBox(p - vec3(0.0, 0.0, 0.0), vec3(0.2, 0.08, 0.08));
+    return min(min(stem, top), min(right, middle));
+}
+
+float sdLetter_Y(vec3 p) {
+    float left = sdBox(p - vec3(-0.2, 0.25, 0.0), vec3(0.08, 0.25, 0.08));
+    float right = sdBox(p - vec3(0.2, 0.25, 0.0), vec3(0.08, 0.25, 0.08));
+    float bottom = sdBox(p - vec3(0.0, -0.25, 0.0), vec3(0.08, 0.25, 0.08));
+    return min(min(left, right), bottom);
+}
+
+float sdLetter_N(vec3 p) {
+    float left = sdBox(p - vec3(-0.3, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float right = sdBox(p - vec3(0.3, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    // Diagonal bar from bottom-left to top-right
+    vec3 dp = p;
+    float angle = atan(1.0, 0.6); // angle for proper diagonal
+    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+    dp.xy = rot * dp.xy;
+    float diagonal = sdBox(dp, vec3(0.08, 0.6, 0.08));
+    return min(left, min(right, diagonal));
+}
+
+float sdLetter_E(vec3 p) {
+    float stem = sdBox(p - vec3(-0.2, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float top = sdBox(p - vec3(0.1, 0.42, 0.0), vec3(0.3, 0.08, 0.08));
+    float middle = sdBox(p - vec3(0.05, 0.0, 0.0), vec3(0.25, 0.08, 0.08));
+    float bottom = sdBox(p - vec3(0.1, -0.42, 0.0), vec3(0.3, 0.08, 0.08));
+    return min(min(stem, top), min(middle, bottom));
+}
+
+float sdLetter_W(vec3 p) {
+    float left = sdBox(p - vec3(-0.35, 0.1, 0.0), vec3(0.08, 0.4, 0.08));
+    float leftMid = sdBox(p - vec3(-0.15, -0.2, 0.0), vec3(0.08, 0.3, 0.08));
+    float rightMid = sdBox(p - vec3(0.15, -0.2, 0.0), vec3(0.08, 0.3, 0.08));
+    float right = sdBox(p - vec3(0.35, 0.1, 0.0), vec3(0.08, 0.4, 0.08));
+    return min(min(left, leftMid), min(rightMid, right));
+}
+
+float sdLetter_R(vec3 p) {
+    float stem = sdBox(p - vec3(-0.2, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float top = sdBox(p - vec3(0.0, 0.3, 0.0), vec3(0.2, 0.08, 0.08));
+    float topRight = sdBox(p - vec3(0.2, 0.15, 0.0), vec3(0.08, 0.15, 0.08));
+    float middle = sdBox(p - vec3(0.0, 0.0, 0.0), vec3(0.2, 0.08, 0.08));
+    float leg = sdBox(p - vec3(0.15, -0.25, 0.0), vec3(0.08, 0.25, 0.08));
+    return min(min(stem, top), min(min(topRight, middle), leg));
+}
+
+float sdDigit_2(vec3 p) {
+    float top = sdBox(p - vec3(0.0, 0.42, 0.0), vec3(0.3, 0.08, 0.08));
+    float topRight = sdBox(p - vec3(0.22, 0.25, 0.0), vec3(0.08, 0.17, 0.08));
+    float middle = sdBox(p - vec3(0.0, 0.0, 0.0), vec3(0.3, 0.08, 0.08));
+    float bottomLeft = sdBox(p - vec3(-0.22, -0.25, 0.0), vec3(0.08, 0.25, 0.08));
+    float bottom = sdBox(p - vec3(0.0, -0.42, 0.0), vec3(0.3, 0.08, 0.08));
+    return min(min(top, topRight), min(middle, min(bottomLeft, bottom)));
+}
+
+float sdDigit_0(vec3 p) {
+    float left = sdBox(p - vec3(-0.22, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float right = sdBox(p - vec3(0.22, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float top = sdBox(p - vec3(0.0, 0.42, 0.0), vec3(0.22, 0.08, 0.08));
+    float bottom = sdBox(p - vec3(0.0, -0.42, 0.0), vec3(0.22, 0.08, 0.08));
+    return min(min(left, right), min(top, bottom));
+}
+
+float sdDigit_6(vec3 p) {
+    float left = sdBox(p - vec3(-0.22, 0.0, 0.0), vec3(0.08, 0.5, 0.08));
+    float top = sdBox(p - vec3(0.0, 0.42, 0.0), vec3(0.22, 0.08, 0.08));
+    float middle = sdBox(p - vec3(0.0, 0.0, 0.0), vec3(0.22, 0.08, 0.08));
+    float bottomRight = sdBox(p - vec3(0.22, -0.21, 0.0), vec3(0.08, 0.21, 0.08));
+    float bottom = sdBox(p - vec3(0.0, -0.42, 0.0), vec3(0.22, 0.08, 0.08));
+    return min(min(left, top), min(middle, min(bottomRight, bottom)));
+}
+
+// Simple 3D horse made of boxes
+float sdHorse(vec3 p) {
+    // Body
+    float body = sdBox(p - vec3(0.0, 0.0, 0.0), vec3(0.3, 0.15, 0.15));
+    
+    // Neck
+    float neck = sdBox(p - vec3(0.25, 0.15, 0.0), vec3(0.08, 0.2, 0.08));
+    
+    // Head
+    float head = sdBox(p - vec3(0.3, 0.35, 0.05), vec3(0.08, 0.1, 0.12));
+    
+    // Legs (4 legs)
+    float leg1 = sdBox(p - vec3(0.15, -0.25, 0.1), vec3(0.05, 0.15, 0.05));
+    float leg2 = sdBox(p - vec3(0.15, -0.25, -0.1), vec3(0.05, 0.15, 0.05));
+    float leg3 = sdBox(p - vec3(-0.15, -0.25, 0.1), vec3(0.05, 0.15, 0.05));
+    float leg4 = sdBox(p - vec3(-0.15, -0.25, -0.1), vec3(0.05, 0.15, 0.05));
+    
+    // Tail
+    float tail = sdBox(p - vec3(-0.35, 0.0, 0.0), vec3(0.1, 0.05, 0.05));
+    
+    float d = body;
+    d = min(d, neck);
+    d = min(d, head);
+    d = min(d, min(leg1, leg2));
+    d = min(d, min(leg3, leg4));
+    d = min(d, tail);
+    
+    return d;
+}
+
+// Calculate text distance only
+float getTextDist(vec3 p) {
+    float textDist = 1000.0;
+    
+    // "HAPPY" - top line
+    textDist = min(textDist, sdLetter_H(p - vec3(-4.0, 2.0, 0.0)));
+    textDist = min(textDist, sdLetter_A(p - vec3(-2.5, 2.0, 0.0)));
+    textDist = min(textDist, sdLetter_P(p - vec3(-1.0, 2.0, 0.0)));
+    textDist = min(textDist, sdLetter_P(p - vec3(0.5, 2.0, 0.0)));
+    textDist = min(textDist, sdLetter_Y(p - vec3(2.0, 2.0, 0.0)));
+    
+    // "NEW" - middle line
+    textDist = min(textDist, sdLetter_N(p - vec3(-2.5, 0.0, 0.0)));
+    textDist = min(textDist, sdLetter_E(p - vec3(-0.8, 0.0, 0.0)));
+    textDist = min(textDist, sdLetter_W(p - vec3(1.0, 0.0, 0.0)));
+    
+    // "YEAR" - bottom line
+    textDist = min(textDist, sdLetter_Y(p - vec3(-4.0, -2.0, 0.0)));
+    textDist = min(textDist, sdLetter_E(p - vec3(-2.3, -2.0, 0.0)));
+    textDist = min(textDist, sdLetter_A(p - vec3(-0.6, -2.0, 0.0)));
+    textDist = min(textDist, sdLetter_R(p - vec3(1.0, -2.0, 0.0)));
+    
+    // "2026" - numbers
+    textDist = min(textDist, sdDigit_2(p - vec3(2.8, -2.0, 0.0)));
+    textDist = min(textDist, sdDigit_0(p - vec3(3.8, -2.0, 0.0)));
+    textDist = min(textDist, sdDigit_2(p - vec3(4.8, -2.0, 0.0)));
+    textDist = min(textDist, sdDigit_6(p - vec3(5.8, -2.0, 0.0)));
+    
+    return textDist;
+}
+
+// Scene distance function
+float map(vec3 p) {
+    float time = iTime * 0.5;
+    
+    // Rotate the scene
+    float angle = time;
+    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+    p.xz *= rot;
+    
+    float textDist = getTextDist(p);
+    
+    // Horses in matrix formation in the background
+    vec3 hp = p;
+    hp.z += 5.0; // Move horses behind the text
+    
+    // Create repeating pattern
+    vec3 horseId = floor((hp + vec3(1.5, 1.5, 1.5)) / 3.0);
+    vec3 horsePos = mod(hp + vec3(1.5, 1.5, 1.5), 3.0) - vec3(1.5, 1.5, 1.5);
+    
+    // Animate horses slightly
+    float horseTime = iTime * 0.3 + horseId.x * 0.5 + horseId.y * 0.7 + horseId.z * 0.3;
+    horsePos.y += sin(horseTime) * 0.1;
+    
+    // Rotate each horse slightly differently
+    float horseAngle = sin(horseTime * 0.5) * 0.3;
+    mat2 horseRot = mat2(cos(horseAngle), -sin(horseAngle), sin(horseAngle), cos(horseAngle));
+    horsePos.xz *= horseRot;
+    
+    float horseScale = 0.8;
+    float horses = sdHorse(horsePos / horseScale) * horseScale;
+    
+    // Hide horses near text (create a clear zone around text)
+    float clearZone = 1.2; // Distance around text where horses won't appear
+    if (textDist < clearZone) {
+        horses = 1000.0; // Don't show horses in the clear zone
+    }
+    
+    // Combine text and horses
+    float d = min(textDist, horses);
+    
+    return d;
+}
+
+// Calculate normal
+vec3 calcNormal(vec3 p) {
+    vec2 e = vec2(0.001, 0.0);
+    return normalize(vec3(
+        map(p + e.xyy) - map(p - e.xyy),
+        map(p + e.yxy) - map(p - e.yxy),
+        map(p + e.yyx) - map(p - e.yyx)
+    ));
+}
+
+// Ray marching
+float rayMarch(vec3 ro, vec3 rd) {
+    float t = 0.0;
+    for (int i = 0; i < 100; i++) {
+        vec3 p = ro + rd * t;
+        float d = map(p);
+        if (d < 0.001 || t > 100.0) break;
+        t += d;
+    }
+    return t;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // Normalized pixel coordinates
+    vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+    
+    // Camera setup
+    vec3 ro = vec3(0.0, 0.0, 12.0);
+    vec3 rd = normalize(vec3(uv, -1.0));
+    
+    // Ray march
+    float t = rayMarch(ro, rd);
+    
+    // Background color - darker for depth
+    vec3 col = vec3(0.02, 0.02, 0.08);
+    
+    if (t < 100.0) {
+        vec3 p = ro + rd * t;
+        vec3 n = calcNormal(p);
+        
+        // Lighting
+        vec3 lightPos = vec3(5.0, 5.0, 10.0);
+        vec3 lightDir = normalize(lightPos - p);
+        float diff = max(dot(n, lightDir), 0.0);
+        float spec = pow(max(dot(reflect(-lightDir, n), -rd), 0.0), 32.0);
+        
+        // Rotate p to match the scene rotation
+        float time = iTime * 0.5;
+        float angle = time;
+        mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+        vec3 pRot = p;
+        pRot.xz *= rot;
+        
+        // Determine if it's text or horse by checking distances
+        float textDist = getTextDist(pRot);
+        bool isText = textDist < 0.01;
+        
+        vec3 baseCol;
+        if (isText) {
+            // White text
+            baseCol = vec3(1.0);
+        } else {
+            // Colorful horses
+            baseCol = vec3(
+                0.5 + 0.5 * sin(iTime),
+                0.5 + 0.5 * sin(iTime + 2.0),
+                0.5 + 0.5 * sin(iTime + 4.0)
+            );
+        }
+        
+        col = baseCol * (0.3 + 0.7 * diff) + vec3(1.0) * spec * (isText ? 1.0 : 0.3);
+        
+        // Ambient occlusion and depth fade
+        float ao = 1.0 - t * 0.01;
+        col *= ao;
+        
+        // Fade horses more in the distance
+        if (!isText) {
+            col *= 0.5;
+        }
+    }
+    
+    // Add some sparkle effect
+    float sparkle = sin(fragCoord.x * 0.1 + iTime * 2.0) * sin(fragCoord.y * 0.1 + iTime * 3.0);
+    sparkle = pow(max(sparkle, 0.0), 20.0);
+    col += vec3(1.0, 0.9, 0.3) * sparkle * 0.5;
+    
+    // Gamma correction
+    col = pow(col, vec3(0.4545));
+    
+    fragColor = vec4(col, 1.0);
+}
